@@ -74,6 +74,7 @@ sharesRouter.get("/:token", async (req, res) => {
   }
   res.json({
     share_id: share.id,
+    video_id: share.videoId,
     title: share.title,
     thumbnail_url: share.thumbnailUrl,
     sender_name: share.senderName ?? "Someone",

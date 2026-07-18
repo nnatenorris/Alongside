@@ -10,9 +10,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getShare, recordConsent, ShareInfo } from '../api/shares';
 
-type Status = 'loading' | 'ready' | 'error' | 'allowed' | 'watch_only';
+type Status = 'loading' | 'ready' | 'error' | 'watch_only';
 
-export default function ConsentScreen({ token }: { token: string }) {
+export default function ConsentScreen({
+  token,
+  onAllow,
+}: {
+  token: string;
+  onAllow: (info: {
+    shareId: string;
+    videoId: string;
+    startSeconds: number;
+  }) => void;
+}) {
   const [status, setStatus] = useState<Status>('loading');
   const [share, setShare] = useState<ShareInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +51,15 @@ export default function ConsentScreen({ token }: { token: string }) {
     if (!share) return;
     try {
       await recordConsent(share.share_id, decision);
-      setStatus(decision === 'allow' ? 'allowed' : 'watch_only');
+      if (decision === 'allow') {
+        onAllow({
+          shareId: share.share_id,
+          videoId: share.video_id,
+          startSeconds: share.start_offset,
+        });
+      } else {
+        setStatus('watch_only');
+      }
     } catch (e) {
       setError(
         e instanceof Error ? e.message : 'Could not record your choice.',
@@ -61,17 +79,6 @@ export default function ConsentScreen({ token }: { token: string }) {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
         <Text style={styles.error}>{error}</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (status === 'allowed') {
-    return (
-      <SafeAreaView style={[styles.screen, styles.centered]}>
-        <Text style={styles.confirm}>Recording your reaction…</Text>
-        <Text style={styles.confirmSub}>
-          (playback + capture land in the next slice)
-        </Text>
       </SafeAreaView>
     );
   }

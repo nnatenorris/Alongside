@@ -19,11 +19,20 @@ export interface Consent {
   decidedAt: string;
 }
 
+export interface Reaction {
+  shareId: string;
+  filePath: string;
+  capturedFrom: number;
+  duration: number;
+  completedAt: string;
+}
+
 // In-memory for now — fine for a single dev process, lost on restart.
 // Swap for real persistence once there's more than one endpoint to share it.
 const sharesById = new Map<string, Share>();
 const idByToken = new Map<string, string>();
 const consentsByShareId = new Map<string, Consent>();
+const reactionsByShareId = new Map<string, Reaction>();
 
 export function saveShare(share: Share): void {
   sharesById.set(share.id, share);
@@ -43,4 +52,12 @@ export function recordConsent(shareId: string, decision: ConsentDecision): Conse
   const consent: Consent = { shareId, decision, decidedAt: new Date().toISOString() };
   consentsByShareId.set(shareId, consent);
   return consent;
+}
+
+export function saveReaction(reaction: Reaction): void {
+  reactionsByShareId.set(reaction.shareId, reaction);
+}
+
+export function getReactionByShareId(shareId: string): Reaction | undefined {
+  return reactionsByShareId.get(shareId);
 }

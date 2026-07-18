@@ -10,6 +10,7 @@ node_modules/
 
 # Backend build output
 backend/dist/
+backend/uploads/
 
 # React Native / Metro
 mobile/.expo/

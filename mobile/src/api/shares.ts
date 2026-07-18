@@ -31,6 +31,7 @@ export async function createShare(params: {
 
 export interface ShareInfo {
   share_id: string;
+  video_id: string;
   title: string;
   thumbnail_url: string;
   sender_name: string;
