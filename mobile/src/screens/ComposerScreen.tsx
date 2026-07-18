@@ -12,8 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createShare, CreateShareResponse } from '../api/shares';
 
-export default function ComposerScreen() {
+export default function ComposerScreen({
+  onOpenLink,
+}: {
+  onOpenLink?: () => void;
+}) {
   const [sourceUrl, setSourceUrl] = useState('');
+  const [senderName, setSenderName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +29,7 @@ export default function ComposerScreen() {
     setResult(null);
     setLoading(true);
     try {
-      const share = await createShare({ sourceUrl, recipientPhone });
+      const share = await createShare({ sourceUrl, senderName, recipientPhone });
       setResult(share);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
@@ -50,6 +55,15 @@ export default function ComposerScreen() {
             autoCorrect={false}
             value={sourceUrl}
             onChangeText={setSourceUrl}
+          />
+
+          <Text style={styles.label}>Your name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Jordan"
+            placeholderTextColor="#5a6066"
+            value={senderName}
+            onChangeText={setSenderName}
           />
 
           <Text style={styles.label}>Send to (phone number)</Text>
@@ -83,6 +97,14 @@ export default function ComposerScreen() {
               <Text style={styles.resultTitle}>{result.title}</Text>
               <Text style={styles.resultLink}>{result.share_link}</Text>
             </View>
+          )}
+
+          {onOpenLink && (
+            <Pressable style={styles.devLink} onPress={onOpenLink}>
+              <Text style={styles.devLinkText}>
+                Dev: open a link as the recipient →
+              </Text>
+            </Pressable>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -131,4 +153,6 @@ const styles = StyleSheet.create({
   },
   resultTitle: { color: '#edeef0', fontWeight: '700', marginBottom: 4 },
   resultLink: { color: '#4de8c7', fontFamily: 'monospace' },
+  devLink: { marginTop: 28, alignItems: 'center' },
+  devLinkText: { color: '#5a6066', fontSize: 12.5 },
 });

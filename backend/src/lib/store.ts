@@ -6,14 +6,24 @@ export interface Share {
   startOffset: number;
   title: string;
   thumbnailUrl: string;
+  senderName: string | null;
   recipientPhone: string | null;
   createdAt: string;
+}
+
+export type ConsentDecision = "allow" | "watch_only";
+
+export interface Consent {
+  shareId: string;
+  decision: ConsentDecision;
+  decidedAt: string;
 }
 
 // In-memory for now — fine for a single dev process, lost on restart.
 // Swap for real persistence once there's more than one endpoint to share it.
 const sharesById = new Map<string, Share>();
 const idByToken = new Map<string, string>();
+const consentsByShareId = new Map<string, Consent>();
 
 export function saveShare(share: Share): void {
   sharesById.set(share.id, share);
@@ -27,4 +37,10 @@ export function getShareByToken(token: string): Share | undefined {
 
 export function getShareById(id: string): Share | undefined {
   return sharesById.get(id);
+}
+
+export function recordConsent(shareId: string, decision: ConsentDecision): Consent {
+  const consent: Consent = { shareId, decision, decidedAt: new Date().toISOString() };
+  consentsByShareId.set(shareId, consent);
+  return consent;
 }
