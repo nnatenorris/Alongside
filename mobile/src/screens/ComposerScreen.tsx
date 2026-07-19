@@ -10,14 +10,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createShare, CreateShareResponse } from '../api/shares';
+import { createShare, CreateShareResponse, SentShare } from '../api/shares';
 
 export default function ComposerScreen({
-  onOpenLink,
-  onViewReplay,
+  onSent,
 }: {
-  onOpenLink?: () => void;
-  onViewReplay?: (shareId: string) => void;
+  onSent: (share: SentShare) => void;
 }) {
   const [sourceUrl, setSourceUrl] = useState('');
   const [senderName, setSenderName] = useState('');
@@ -98,25 +96,22 @@ export default function ComposerScreen({
             <View style={styles.result}>
               <Text style={styles.resultTitle}>{result.title}</Text>
               <Text style={styles.resultLink}>{result.share_link}</Text>
+              <Pressable
+                style={styles.doneButton}
+                onPress={() =>
+                  onSent({
+                    shareId: result.share_id,
+                    videoId: result.video_id,
+                    title: result.title,
+                    thumbnailUrl: result.thumbnail_url,
+                    createdAt: new Date().toISOString(),
+                  })
+                }>
+                <Text style={styles.doneButtonText}>
+                  Back to your shares →
+                </Text>
+              </Pressable>
             </View>
-          )}
-
-          {result && onViewReplay && (
-            <Pressable
-              style={styles.devLink}
-              onPress={() => onViewReplay(result.share_id)}>
-              <Text style={styles.devLinkText}>
-                Dev: view the reaction →
-              </Text>
-            </Pressable>
-          )}
-
-          {onOpenLink && (
-            <Pressable style={styles.devLink} onPress={onOpenLink}>
-              <Text style={styles.devLinkText}>
-                Dev: open a link as the recipient →
-              </Text>
-            </Pressable>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -165,6 +160,13 @@ const styles = StyleSheet.create({
   },
   resultTitle: { color: '#edeef0', fontWeight: '700', marginBottom: 4 },
   resultLink: { color: '#4de8c7', fontFamily: 'monospace' },
-  devLink: { marginTop: 28, alignItems: 'center' },
-  devLinkText: { color: '#5a6066', fontSize: 12.5 },
+  doneButton: {
+    borderWidth: 1,
+    borderColor: '#ffffff2a',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  doneButtonText: { color: '#edeef0', fontWeight: '600', fontSize: 14 },
 });

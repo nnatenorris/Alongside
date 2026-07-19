@@ -6,34 +6,55 @@
 import { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import HomeScreen from './src/screens/HomeScreen';
 import ComposerScreen from './src/screens/ComposerScreen';
 import OpenLinkScreen from './src/screens/OpenLinkScreen';
 import ConsentScreen from './src/screens/ConsentScreen';
 import ReactionCaptureScreen from './src/screens/ReactionCaptureScreen';
 import ReplayScreen from './src/screens/ReplayScreen';
+import { SentShare } from './src/api/shares';
 
 type Screen =
+  | { name: 'home' }
   | { name: 'composer' }
-  | { name: 'open' }
+  | { name: 'open'; purpose: 'consent' | 'replay' }
   | { name: 'consent'; token: string }
   | { name: 'capture'; shareId: string; videoId: string; startSeconds: number }
   | { name: 'replay'; shareId: string };
 
 function App() {
-  const [screen, setScreen] = useState<Screen>({ name: 'composer' });
+  const [screen, setScreen] = useState<Screen>({ name: 'home' });
+  const [sentShares, setSentShares] = useState<SentShare[]>([]);
 
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" />
+      {screen.name === 'home' && (
+        <HomeScreen
+          sentShares={sentShares}
+          onSend={() => setScreen({ name: 'composer' })}
+          onViewReplay={share =>
+            setScreen({ name: 'replay', shareId: share.shareId })
+          }
+          onOpenLink={() => setScreen({ name: 'open', purpose: 'consent' })}
+          onLookupReplay={() => setScreen({ name: 'open', purpose: 'replay' })}
+        />
+      )}
       {screen.name === 'composer' && (
         <ComposerScreen
-          onOpenLink={() => setScreen({ name: 'open' })}
-          onViewReplay={shareId => setScreen({ name: 'replay', shareId })}
+          onSent={share => {
+            setSentShares(prev => [share, ...prev]);
+            setScreen({ name: 'home' });
+          }}
         />
       )}
       {screen.name === 'open' && (
         <OpenLinkScreen
-          onToken={token => setScreen({ name: 'consent', token })}
+          onToken={token =>
+            screen.purpose === 'replay'
+              ? setScreen({ name: 'replay', shareId: token })
+              : setScreen({ name: 'consent', token })
+          }
         />
       )}
       {screen.name === 'consent' && (

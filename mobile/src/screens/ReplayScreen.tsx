@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getReplay, ReplayInfo } from '../api/reactions';
-import ReplayPlayer from '../components/ReplayPlayer';
+import YouTubePlayer, { PlayerEvent } from '../components/YouTubePlayer';
+import ReactionVideoPlayer, {
+  ReactionVideoHandle,
+} from '../components/ReactionVideoPlayer';
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -12,6 +15,7 @@ export default function ReplayScreen({ shareId }: { shareId: string }) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [replay, setReplay] = useState<ReplayInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const reactionRef = useRef<ReactionVideoHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,14 +47,20 @@ export default function ReplayScreen({ shareId }: { shareId: string }) {
     };
   }, [shareId]);
 
+  // The YouTube player only ever signals "playback started/stopped" — the
+  // same signal the capture screen uses to start/stop recording — so replay
+  // reuses it to start/stop the reaction clip in lockstep with the source.
+  const onPlayerEvent = (event: PlayerEvent) => {
+    if (event.type === 'START_CAPTURE') reactionRef.current?.play();
+    if (event.type === 'STOP_CAPTURE') reactionRef.current?.pause();
+  };
+
   if (phase === 'loading' || phase === 'pending') {
     return (
       <SafeAreaView style={[styles.screen, styles.centered]}>
         <ActivityIndicator color="#4de8c7" />
         <Text style={styles.waiting}>
-          {phase === 'pending'
-            ? 'Waiting for their reaction…'
-            : 'Loading…'}
+          {phase === 'pending' ? 'Waiting for their reaction…' : 'Loading…'}
         </Text>
       </SafeAreaView>
     );
@@ -68,10 +78,15 @@ export default function ReplayScreen({ shareId }: { shareId: string }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ReplayPlayer
+      <YouTubePlayer
         videoId={replay.video_id}
         startSeconds={replay.captured_from}
-        reactionUrl={replay.reaction_url}
+        onEvent={onPlayerEvent}
+      />
+      <ReactionVideoPlayer
+        ref={reactionRef}
+        videoUrl={replay.reaction_url}
+        visible
       />
     </SafeAreaView>
   );

@@ -2,7 +2,14 @@ import { randomBytes, randomUUID } from "crypto";
 import { Router } from "express";
 import { reactionsRouter } from "./reactions";
 import { parseYouTubeUrl, resolveYouTubeVideo } from "../lib/youtube";
-import { getShareById, getShareByToken, recordConsent, saveShare } from "../lib/store";
+import {
+  getConsentByShareId,
+  getReactionByShareId,
+  getShareById,
+  getShareByToken,
+  recordConsent,
+  saveShare,
+} from "../lib/store";
 import { sendShareSms } from "../lib/sms";
 
 export const sharesRouter = Router();
@@ -61,6 +68,7 @@ sharesRouter.post("/", async (req, res) => {
   res.status(201).json({
     share_id: id,
     share_link: shareLink,
+    video_id: videoId,
     title: video.title,
     thumbnail_url: video.thumbnailUrl,
     start_offset: startOffset,
@@ -80,6 +88,23 @@ sharesRouter.get("/:token", async (req, res) => {
     sender_name: share.senderName ?? "Someone",
     start_offset: share.startOffset,
   });
+});
+
+sharesRouter.get("/:id/status", async (req, res) => {
+  const share = getShareById(req.params.id);
+  if (!share) {
+    return res.status(404).json({ error: "share not found" });
+  }
+  const consent = getConsentByShareId(share.id);
+  let status: "pending" | "watch_only" | "awaiting_reaction" | "reacted";
+  if (!consent) {
+    status = "pending";
+  } else if (consent.decision === "watch_only") {
+    status = "watch_only";
+  } else {
+    status = getReactionByShareId(share.id) ? "reacted" : "awaiting_reaction";
+  }
+  res.json({ status });
 });
 
 sharesRouter.post("/:id/consent", async (req, res) => {

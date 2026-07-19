@@ -54,6 +54,10 @@ export function recordConsent(shareId: string, decision: ConsentDecision): Conse
   return consent;
 }
 
+export function getConsentByShareId(shareId: string): Consent | undefined {
+  return consentsByShareId.get(shareId);
+}
+
 export function saveReaction(reaction: Reaction): void {
   reactionsByShareId.set(reaction.shareId, reaction);
 }

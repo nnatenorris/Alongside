@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../config';
 export interface CreateShareResponse {
   share_id: string;
   share_link: string;
+  video_id: string;
   title: string;
   thumbnail_url: string;
   start_offset: number;
@@ -43,6 +44,27 @@ export async function getShare(token: string): Promise<ShareInfo> {
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error ?? "This link isn't valid.");
+  }
+  return data;
+}
+
+export interface SentShare {
+  shareId: string;
+  videoId: string;
+  title: string;
+  thumbnailUrl: string;
+  createdAt: string;
+}
+
+export type ShareStatus = 'pending' | 'watch_only' | 'awaiting_reaction' | 'reacted';
+
+export async function getShareStatus(
+  shareId: string,
+): Promise<{ status: ShareStatus }> {
+  const res = await fetch(`${API_BASE_URL}/shares/${shareId}/status`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? 'Could not check the status of that share.');
   }
   return data;
 }
