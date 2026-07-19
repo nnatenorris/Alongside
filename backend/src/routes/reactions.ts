@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import fs from "fs/promises";
 import path from "path";
-import { getShareById, saveReaction } from "../lib/store";
+import { getReactionByShareId, getShareById, saveReaction } from "../lib/store";
 
 export const reactionsRouter = Router({ mergeParams: true });
 
@@ -62,6 +62,34 @@ reactionsRouter.post("/complete", async (req, res) => {
 });
 
 reactionsRouter.get("/", async (req, res) => {
-  // TODO: return a signed GET URL + sync offsets for the replay screen
-  res.status(501).json({ error: "not implemented" });
+  const { id } = req.params as { id: string };
+  const share = getShareById(id);
+  if (!share) {
+    return res.status(404).json({ error: "share not found" });
+  }
+  const reaction = getReactionByShareId(id);
+  if (!reaction) {
+    return res.json({ status: "pending" });
+  }
+  const base = process.env.PUBLIC_BASE_URL ?? "http://localhost:4000";
+  res.json({
+    status: "ready",
+    video_id: share.videoId,
+    start_offset: share.startOffset,
+    title: share.title,
+    reaction_url: `${base}/shares/${id}/reaction/file`,
+    captured_from: reaction.capturedFrom,
+    duration: reaction.duration,
+  });
+});
+
+// Dev-mode stand-in for a signed GET URL from real object storage — see the
+// matching comment on /init above.
+reactionsRouter.get("/file", async (req, res) => {
+  const { id } = req.params as { id: string };
+  const reaction = getReactionByShareId(id);
+  if (!reaction) {
+    return res.status(404).json({ error: "reaction not found" });
+  }
+  res.sendFile(reaction.filePath);
 });

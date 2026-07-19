@@ -10,12 +10,14 @@ import ComposerScreen from './src/screens/ComposerScreen';
 import OpenLinkScreen from './src/screens/OpenLinkScreen';
 import ConsentScreen from './src/screens/ConsentScreen';
 import ReactionCaptureScreen from './src/screens/ReactionCaptureScreen';
+import ReplayScreen from './src/screens/ReplayScreen';
 
 type Screen =
   | { name: 'composer' }
   | { name: 'open' }
   | { name: 'consent'; token: string }
-  | { name: 'capture'; shareId: string; videoId: string; startSeconds: number };
+  | { name: 'capture'; shareId: string; videoId: string; startSeconds: number }
+  | { name: 'replay'; shareId: string };
 
 function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'composer' });
@@ -24,7 +26,10 @@ function App() {
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" />
       {screen.name === 'composer' && (
-        <ComposerScreen onOpenLink={() => setScreen({ name: 'open' })} />
+        <ComposerScreen
+          onOpenLink={() => setScreen({ name: 'open' })}
+          onViewReplay={shareId => setScreen({ name: 'replay', shareId })}
+        />
       )}
       {screen.name === 'open' && (
         <OpenLinkScreen
@@ -45,6 +50,9 @@ function App() {
           videoId={screen.videoId}
           startSeconds={screen.startSeconds}
         />
+      )}
+      {screen.name === 'replay' && (
+        <ReplayScreen shareId={screen.shareId} />
       )}
     </SafeAreaProvider>
   );

@@ -14,8 +14,10 @@ import { createShare, CreateShareResponse } from '../api/shares';
 
 export default function ComposerScreen({
   onOpenLink,
+  onViewReplay,
 }: {
   onOpenLink?: () => void;
+  onViewReplay?: (shareId: string) => void;
 }) {
   const [sourceUrl, setSourceUrl] = useState('');
   const [senderName, setSenderName] = useState('');
@@ -97,6 +99,16 @@ export default function ComposerScreen({
               <Text style={styles.resultTitle}>{result.title}</Text>
               <Text style={styles.resultLink}>{result.share_link}</Text>
             </View>
+          )}
+
+          {result && onViewReplay && (
+            <Pressable
+              style={styles.devLink}
+              onPress={() => onViewReplay(result.share_id)}>
+              <Text style={styles.devLinkText}>
+                Dev: view the reaction →
+              </Text>
+            </Pressable>
           )}
 
           {onOpenLink && (

@@ -56,3 +56,24 @@ export async function completeReaction(
     throw new Error(data.error ?? 'Could not finish sending the reaction.');
   }
 }
+
+export type ReplayInfo =
+  | { status: 'pending' }
+  | {
+      status: 'ready';
+      video_id: string;
+      start_offset: number;
+      title: string;
+      reaction_url: string;
+      captured_from: number;
+      duration: number;
+    };
+
+export async function getReplay(shareId: string): Promise<ReplayInfo> {
+  const res = await fetch(`${API_BASE_URL}/shares/${shareId}/reaction`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? 'Could not load the reaction.');
+  }
+  return data;
+}
