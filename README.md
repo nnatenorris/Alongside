@@ -17,4 +17,5 @@ policy, and the project's design artifact for the full product sketch
 
 ## Status
 
-Scaffolding stage. No features implemented yet.
+Core flow implemented end-to-end: share creation, consent, reaction capture,
+and sender replay. All async, YouTube-only (Phase 0 scope).
