@@ -12,6 +12,11 @@ node_modules/
 backend/dist/
 backend/uploads/
 
+# Email manager
+email-manager/backend/dist/
+email-manager/backend/data/
+email-manager/frontend/dist/
+
 # React Native / Metro
 mobile/.expo/
 *.jsbundle
