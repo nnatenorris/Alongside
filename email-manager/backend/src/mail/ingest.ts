@@ -3,7 +3,7 @@ import { categorize, isBulkSignal } from "./categorize";
 import { scoreImportance, bandImportance } from "./importance";
 import { applyRules } from "./rules";
 import { isVip } from "./repository";
-import { parseListUnsubscribe } from "../lib/listUnsubscribe";
+import { findUnsubscribeLinkInHtml, parseListUnsubscribe } from "../lib/listUnsubscribe";
 
 const upsertStmt = db.prepare(`
   INSERT INTO messages (
@@ -22,7 +22,11 @@ const upsertStmt = db.prepare(`
     flagged = excluded.flagged,
     category = excluded.category,
     importance = excluded.importance,
-    importance_score = excluded.importance_score
+    importance_score = excluded.importance_score,
+    list_unsubscribe_mailto = excluded.list_unsubscribe_mailto,
+    list_unsubscribe_http = excluded.list_unsubscribe_http,
+    list_unsubscribe_one_click = excluded.list_unsubscribe_one_click,
+    is_bulk = excluded.is_bulk
 `);
 
 export interface IngestInput {
@@ -62,6 +66,14 @@ export function ingestMessage(input: IngestInput): void {
     input.listUnsubscribeHeader,
     input.listUnsubscribePostHeader
   );
+  // Plenty of real-world senders (even large ones) skip the List-Unsubscribe
+  // header entirely but still put a plain "unsubscribe" link in the footer.
+  // Scrape for it here (not just when the user clicks Unsubscribe) so the
+  // Subscriptions list and message banner can actually offer it.
+  const scrapedUnsubscribeLink =
+    !parsedUnsub.mailto && !parsedUnsub.http ? findUnsubscribeLinkInHtml(input.bodyHtml) : null;
+  const listUnsubscribeHttp = parsedUnsub.http ?? scrapedUnsubscribeLink;
+
   const categorizeInput = {
     fromAddress: input.fromAddress,
     fromName: input.fromName,
@@ -69,7 +81,7 @@ export function ingestMessage(input: IngestInput): void {
     bodyText: input.bodyText,
     listId: input.listId,
     precedenceBulk: input.precedenceBulk,
-    hasListUnsubscribe: Boolean(input.listUnsubscribeHeader),
+    hasListUnsubscribe: Boolean(input.listUnsubscribeHeader) || Boolean(scrapedUnsubscribeLink),
   };
   const isBulk = isBulkSignal(categorizeInput);
   let category = categorize(categorizeInput);
@@ -106,7 +118,7 @@ export function ingestMessage(input: IngestInput): void {
     seen: input.seen ? 1 : 0,
     flagged: input.flagged ? 1 : 0,
     list_unsubscribe_mailto: parsedUnsub.mailto,
-    list_unsubscribe_http: parsedUnsub.http,
+    list_unsubscribe_http: listUnsubscribeHttp,
     list_unsubscribe_one_click: parsedUnsub.oneClick ? 1 : 0,
     is_bulk: isBulk ? 1 : 0,
     category,
