@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { categorize } from "./categorize";
+import { categorize, isBulkSignal } from "./categorize";
 import { scoreImportance, bandImportance } from "./importance";
 import { applyRules } from "./rules";
 import { isVip } from "./repository";
@@ -62,10 +62,7 @@ export function ingestMessage(input: IngestInput): void {
     input.listUnsubscribeHeader,
     input.listUnsubscribePostHeader
   );
-  const isBulk =
-    input.precedenceBulk || Boolean(input.listId) || Boolean(input.listUnsubscribeHeader);
-
-  let category = categorize({
+  const categorizeInput = {
     fromAddress: input.fromAddress,
     fromName: input.fromName,
     subject: input.subject,
@@ -73,7 +70,9 @@ export function ingestMessage(input: IngestInput): void {
     listId: input.listId,
     precedenceBulk: input.precedenceBulk,
     hasListUnsubscribe: Boolean(input.listUnsubscribeHeader),
-  });
+  };
+  const isBulk = isBulkSignal(categorizeInput);
+  let category = categorize(categorizeInput);
 
   const ruleEffect = applyRules(input.fromAddress, input.subject);
   if (ruleEffect.category) category = ruleEffect.category;

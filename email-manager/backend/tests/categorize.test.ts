@@ -67,6 +67,24 @@ describe("categorize", () => {
     expect(category).toBe("updates");
   });
 
+  it("routes marketing mail with no bulk headers but tracking-link-heavy body to promotions", () => {
+    // Real-world case: sender impersonates a brand ("Customer Experience
+    // Team") from an unrelated ESP domain, sets no List-Unsubscribe/List-Id/
+    // Precedence, and the body is just several long tracking-redirect URLs.
+    const trackingLink =
+      "http://vibesnew.com/zvlbqpron!66812121541/61736497:zgzkjfss/7167303.yzokcjg/85lowctrlpimg1.jpeg";
+    const category = categorize({
+      fromAddress: "ivortionloustran@quartz.vibesnew.com",
+      fromName: "Customer Experience Team",
+      subject: "Don't miss your Lowe's reward invite",
+      bodyText: `${trackingLink} ${trackingLink} ${trackingLink}`,
+      listId: null,
+      precedenceBulk: false,
+      hasListUnsubscribe: false,
+    });
+    expect(category).toBe("promotions");
+  });
+
   it("defaults personal mail to primary", () => {
     const category = categorize({
       fromAddress: "mom@example.com",

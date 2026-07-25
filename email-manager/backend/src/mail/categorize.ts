@@ -71,7 +71,26 @@ const PROMOTIONS_KEYWORDS = [
   "shop now",
   "flash sale",
   "best price",
+  "reward invite",
+  "rewards program",
+  "you could win",
+  "don't miss your",
+  "leave your feedback",
+  "compare prices",
+  "member exclusive",
+  "special offer",
 ];
+
+// Marketing-automation platforms wrap every link in a long, cryptic
+// tracking URL (campaign/recipient IDs baked into the path). A real
+// person's email essentially never contains more than one of these, so two
+// or more is a strong "this is bulk mail" signal even when the sender
+// skipped List-Unsubscribe/List-Id/Precedence entirely.
+const TRACKING_LINK_PATTERN = /https?:\/\/\S{40,}/g;
+
+function countTrackingLinks(text: string): number {
+  return (text.match(TRACKING_LINK_PATTERN) || []).length;
+}
 
 const SPAM_KEYWORDS = [
   "viagra",
@@ -90,6 +109,17 @@ const SPAM_KEYWORDS = [
 
 function includesAny(haystack: string, needles: string[]): boolean {
   return needles.some((n) => haystack.includes(n));
+}
+
+/** Whether a message counts as bulk/automated mail — shared with ingest.ts
+ * so the stored `is_bulk` flag always matches what categorize() used. */
+export function isBulkSignal(input: CategorizeInput): boolean {
+  return (
+    input.precedenceBulk ||
+    Boolean(input.listId) ||
+    input.hasListUnsubscribe ||
+    countTrackingLinks(input.bodyText) >= 2
+  );
 }
 
 export function categorize(input: CategorizeInput): Category {
@@ -120,8 +150,7 @@ export function categorize(input: CategorizeInput): Category {
 
   const updatesHit = includesAny(combined, UPDATES_KEYWORDS);
   const promoHit = includesAny(combined, PROMOTIONS_KEYWORDS);
-
-  const isBulkMail = input.precedenceBulk || Boolean(input.listId) || input.hasListUnsubscribe;
+  const isBulkMail = isBulkSignal(input);
 
   if (promoHit || (isBulkMail && !updatesHit)) {
     return "promotions";
