@@ -14,6 +14,9 @@ policy, and the project's design artifact for the full product sketch
 - `mobile/` — React Native app (sender + recipient-with-app experience)
 - `backend/` — API: share creation, consent logging, reaction upload/delivery
 - `docs/` — policy and reference docs
+- `email-manager/` — standalone tool, unrelated to the Alongside product:
+  a self-hosted AOL inbox manager (categorization, importance sorting,
+  unsubscribe automation). See [`email-manager/README.md`](email-manager/README.md).
 
 ## Status
 
