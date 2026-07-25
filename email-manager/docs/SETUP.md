@@ -41,22 +41,27 @@ app or for development.
 
 ## 3. Start it
 
-```bash
-npm run dev
-```
-
-On startup the server connects to `imap.aol.com` over TLS and does an
-initial sync of your most recent messages (`SYNC_FETCH_LIMIT`, default
-200) from the Inbox. Then start the frontend:
+For this first run, build the frontend once so the single-server launcher
+has something to serve:
 
 ```bash
 cd ../frontend
 npm install
-npm run dev
+npm run build
 ```
 
-Open http://localhost:5173 — you should see your real inbox, sorted and
-categorized.
+Then, from the `email-manager` folder (one level up from `backend`),
+double-click **`Start Inbox Manager.bat`**. It installs anything still
+missing, starts the server, and opens your browser to
+http://localhost:4100 automatically — you should see your real inbox,
+sorted and categorized. On startup the server connects to `imap.aol.com`
+over TLS and does an initial sync of your most recent messages
+(`SYNC_FETCH_LIMIT`, default 200) from the Inbox.
+
+From now on, that `.bat` file is the only thing you need to run this tool
+— no terminal required. (If you're not on Windows, or you're actively
+changing the code, run `npm run dev` in `backend/` directly instead; see
+the main [README](../README.md) for the live-reload developer workflow.)
 
 ## 4. (Optional) background sync
 

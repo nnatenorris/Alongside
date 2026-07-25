@@ -42,11 +42,29 @@ reasoning behind the categorization/importance/unsubscribe logic.
   categorization + importance scoring, unsubscribe engine, REST API.
 - `frontend/` — React/Vite dashboard that talks to the API.
 
-## Quick start (try it without an AOL account)
+## Everyday use (Windows): double-click to start
+
+Once you've connected your AOL account once (see below), day to day you
+don't need a terminal at all — just double-click **`Start Inbox
+Manager.bat`** in this folder. It starts everything and opens the app in
+your browser automatically at **http://localhost:4100**. Right-click that
+file → Send to → Desktop (create shortcut) if you want it on your desktop.
+
+To stop, close the "Inbox Manager" window it opens (or Ctrl+C in it).
+
+## Connect your real AOL account (one-time setup)
+
+See [`docs/SETUP.md`](docs/SETUP.md) — you'll need to generate an AOL
+**app password** (your regular password won't work over IMAP) and drop it
+into `backend/.env`. Full setup takes about five minutes. After that,
+`Start Inbox Manager.bat` is all you need going forward.
+
+## Developer quick start (try it without an AOL account, live-reload)
 
 The backend runs in **demo mode** automatically when no AOL credentials
 are configured — it seeds realistic sample mail so you can try every
-feature before connecting your real inbox.
+feature before connecting your real inbox. This mode is for making code
+changes (it live-reloads); for normal use, see "Everyday use" above.
 
 ```bash
 cd email-manager/backend
@@ -56,16 +74,11 @@ npm run dev          # http://localhost:4100, demo mode
 # in another terminal
 cd email-manager/frontend
 npm install
-npm run dev           # http://localhost:5173
+npm run dev           # http://localhost:5173, live-reloads on edits
 ```
 
-Open http://localhost:5173.
-
-## Connect your real AOL account
-
-See [`docs/SETUP.md`](docs/SETUP.md) — you'll need to generate an AOL
-**app password** (your regular password won't work over IMAP) and drop it
-into `backend/.env`. Full setup takes about five minutes.
+Open http://localhost:5173 (not :4100 — that's the dev-mode frontend
+server; the API alone is on :4100).
 
 ## Tests
 

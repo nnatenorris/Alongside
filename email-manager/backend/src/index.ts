@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cron from "node-cron";
+import fs from "node:fs";
+import path from "node:path";
 import { config } from "./config";
 import "./db"; // ensures schema is created before routes touch it
 import { messagesRouter } from "./routes/messages";
@@ -23,6 +25,27 @@ app.use("/api/rules", rulesRouter);
 app.use("/api", unsubscribeRouter);
 app.use("/api/digest", digestRouter);
 app.use("/api/sync", syncRouter);
+
+// Serve the built frontend from the same server/port for day-to-day use,
+// so there's only one process to run instead of separate frontend/backend
+// dev servers. Falls back to index.html for any non-API route (the app is
+// a single-page app with no server-side routes of its own).
+const frontendDist = path.resolve(__dirname, "../../frontend/dist");
+const frontendIndexHtml = path.join(frontendDist, "index.html");
+if (fs.existsSync(frontendIndexHtml)) {
+  app.use(express.static(frontendDist));
+  app.get(/^(?!\/api\/).*/, (_req, res) => {
+    res.sendFile(frontendIndexHtml);
+  });
+} else {
+  app.get("/", (_req, res) => {
+    res
+      .status(503)
+      .send(
+        "Frontend isn't built yet. Run: cd ../frontend && npm install && npm run build — then restart this server."
+      );
+  });
+}
 
 app.listen(config.port, () => {
   console.log(`Email manager API listening on :${config.port} (demo mode: ${config.demoMode})`);
